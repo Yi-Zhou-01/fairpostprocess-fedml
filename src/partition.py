@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from dataset import AdultDataset, CompasDataset, WCLDDataset, PTBDataset, NIHDataset
 import dataset
 
+
 def iid_sampling(dataset, num_clients):
     """
     Sample I.I.D. client data from Adult dataset
-    Equallly divide data samples into N groups based on its original order
     :param dataset:
     :param num_clients:
     :return: dict of data index
@@ -26,18 +26,12 @@ def iid_sampling(dataset, num_clients):
 
 def dirichlet_sampling(dataset, num_clients, alpha):
     """
-    Sample Non-I.I.D. client data from Adult dataset
-    Equallly divide data samples into N groups based on its original order
-    :param dataset:
-    :param num_clients:
-    :param attr: imbalanced partition based on attr attribute
-    :param dirichlet: value of alpha parameter of dirichlet distribution, None if dirichlet is not chosen
-    :param ratio: ratio of attribute split where attr=1, None if quantity split is not chosen
-    :return: dict of data index
+    Sample Non-I.I.D. data using Dirichlet distribution.
+    :param dataset: dataset name
+    :param num_clients: Number of clients for sampling.
+    :param alpha: Parameter controlling the level of data heterogeneity in Dirichlet distribution, where smaller alpha provides a more heterogeneous distribution.
     """
 
-    # if dirichlet:
-    # attr = dataset.target
     train_labels = dataset.y.astype(np.float32)
     n_classes = len(set(train_labels))
 
@@ -45,9 +39,7 @@ def dirichlet_sampling(dataset, num_clients, alpha):
     class_idcs = [np.argwhere(train_labels == y).flatten()
                 for y in range(n_classes)]
 
-    # 
     client_idcs = [[] for _ in range(num_clients)]
-    # client_idcs =  {i: np.array([]) for i in range(num_clients)}
     for k_idcs, fracs in zip(class_idcs, label_distribution):
 
         for i, idcs in enumerate(np.split(k_idcs,
@@ -66,7 +58,6 @@ def get_args():
     parser.add_argument('--partition', type=str, default='diri', help='the data partitioning strategy')
     parser.add_argument('--n_clients', type=int, default=10,  help='number of workers in a distributed cluster')
     parser.add_argument('--partition_idx', type=str, required=False, default="0", help="Output directory")
-    
     parser.add_argument('--alpha', type=float, default=0.5, help='The parameter for the dirichlet distribution for data partitioning')
     # parser.add_argument('--target_attr', type=str, default=None, help='Sampling based on target_attr')
     parser.add_argument('--dataset', type=str, default='adult', help='The dataset for partition')
@@ -140,8 +131,6 @@ if __name__ == '__main__':
 
     np.save(save_to_file,client_idcs)
     print("Data partition successfully saved in: ", save_to_file)
-
-    
 
     # Save the client-wise partition plot
     plt.figure(figsize=(12, 8))
